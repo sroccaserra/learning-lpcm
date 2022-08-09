@@ -20,6 +20,12 @@ In the source code I implemented:
 - Big-endian signed 16 bit output (`S16_BE`)
 - Constant but configurable sample rate
 
+## Run the tests
+
+```
+$ gforth src/lpcm-test.fs -e bye
+```
+
 ## References
 
 - Pulse-code modulation ~ <https://en.wikipedia.org/wiki/Pulse-code_modulation>
@@ -28,3 +34,4 @@ In the source code I implemented:
 - Floating Point ~ <https://gforth.org/manual/Floating-Point.html>
 - aplay ~ <https://alsa.opensrc.org/Aplay>
 - SoX ~ <http://sox.sourceforge.net/>
+- Envelope (music) ~ <https://en.wikipedia.org/wiki/Envelope_(music)>

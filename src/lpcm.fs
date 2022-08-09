@@ -20,8 +20,46 @@ low_sample_rate 1/f Fconstant low_sample_width
 cd_sample_rate Fconstant sample_rate
 cd_sample_width Fconstant sample_width
 
-: f2dup ( r1 r2 -- r1 r2 r1 r2 )
+: _f2dup ( r1 r2 -- r1 r2 r1 r2 )
     fover fover ;
+
+\ ---------------------------------------------------------------------------- \
+\ Voice state
+\ ---------------------------------------------------------------------------- \
+
+.1e Fconstant a
+1e Fconstant d
+.0e Fconstant s
+.0e Fconstant r
+false Constant is-hold
+
+: attack ( t -- r )
+    a f/ ;
+
+: decay ( t -- r )
+    d f0= if
+        fdrop s exit
+    then
+    [ s 1e f- d f/ ] fliteral f*
+    [ 1e s 1e f- a f* d f/ f- ] fliteral f+ ;
+
+: sustain ( t -- r )
+    fdrop s ;
+
+: release ( t -- r )
+    fdrop 0e ;
+
+: adsr ( t -- r )
+    case
+        fdup a f<= ?of
+            attack endof
+        fdup a d f+ f<= ?of
+            decay endof
+        is-hold ?of
+            sustain endof
+        true ?of
+            release endof
+    endcase ;
 
 \ ---------------------------------------------------------------------------- \
 \ Wave words.
@@ -29,11 +67,9 @@ cd_sample_width Fconstant sample_width
 \ ---------------------------------------------------------------------------- \
 
 : sine-wave ( t freq -- r )
-    \ Generates a float value between -1 and 1
     tau f* f* fsin ;
 
 : square-wave ( t freq -- r )
-    \ Generates a float value between -1 and 1
     sine-wave f0> if
         1e
     else
@@ -42,7 +78,7 @@ cd_sample_width Fconstant sample_width
 
 : mixed-square-and-sine-wave ( t freq -- r )
     .15e .85e { f: square-k f: sine-k }
-    f2dup square-wave square-k f*
+    _f2dup square-wave square-k f*
     f-rot sine-wave sine-k f*
     f+ ;
 
@@ -52,18 +88,15 @@ cd_sample_width Fconstant sample_width
 \ ---------------------------------------------------------------------------- \
 
 : u8-mono-out ( r -- )
-    \ Assumes r is a float value between -1 and 1
     1e f+ f2/ max_8_bit_volume f*
     f>s emit ;
 
 : s16_le-mono-out ( r -- )
-    \ Assumes r is a float value between -1 and 1
     f2/ max_16_bit_volume f* f>s
     dup emit
     256 / emit ;
 
 : s16_be-mono-out ( r -- )
-    \ Assumes r is a float value between -1 and 1
     f2/ max_16_bit_volume f* f>s
     dup 256 / emit
     emit ;
@@ -76,13 +109,18 @@ cd_sample_width Fconstant sample_width
     s>f sample_width f* ;
 
 : main
-    sample_rate f>s 0 do
-        i tick-to-t a-440-freq
+    sample_rate 1.1e f* f>s 0 do
+        i tick-to-t ( t )
+        fdup adsr fswap ( envelope t )
+        a-440-freq ( envelope t freq )
 
         \ sine-wave
         \ square-wave 8e f/
         mixed-square-and-sine-wave
+        f*
 
         s16_le-mono-out
         \ u8-mono-out
-    loop ;
+    loop
+    assert( depth 0= )
+    assert( fdepth 0= ) ;
