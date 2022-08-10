@@ -87,6 +87,16 @@ false Constant is-hold
     f-rot sine-wave sine-k f*
     f+ ;
 
+: sample-value ( t -- r )
+    fdup adsr fswap ( envelope t )
+    a-440-freq ( envelope t freq )
+
+    \ sine-wave
+    \ saw-wave
+    square-wave 8e f/
+    \ mixed-square-and-sine-wave
+    f* ;
+
 \ ---------------------------------------------------------------------------- \
 \ Output generation, one value at a time.
 \ These words assume that r is a float value between -1 and 1.
@@ -115,16 +125,8 @@ false Constant is-hold
 
 : main
     sample_rate 1.1e f* f>s 0 do
-        i tick-to-t ( t )
-        fdup adsr fswap ( envelope t )
-        a-440-freq ( envelope t freq )
-
-        \ sine-wave
-        \ saw-wave
-        \ square-wave 8e f/
-        mixed-square-and-sine-wave
-        f*
-
+        i tick-to-t
+        sample-value
         s16_le-mono-out
         \ u8-mono-out
     loop
