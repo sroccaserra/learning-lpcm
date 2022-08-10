@@ -5,13 +5,13 @@ Learning how to create LPCM encoded signals.
 I'm starting to learn using Gforth and aplay (under Linux) or SoX.
 
 ```
-$ gforth src/lpcm.fs -e 'main bye' | aplay -f s16 -r 44100
+$ gforth src/lpcm.fs -e 'main bye' | aplay -t raw -c 1 -f s16_le -r 44100
 ```
 
 To use with SoX (Windows, macOS, Linux):
 
 ```
-$ gforth src/lpcm.fs -e 'main bye' | play -t raw -e signed-integer -b 16 -L -c 1 -r 44100 -
+$ gforth src/lpcm.fs -e 'main bye' | play -t raw -c 1 -e signed-integer -b 16 -L -r 44100 -
 ```
 
 In the source code I implemented:
