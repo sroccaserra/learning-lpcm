@@ -6,20 +6,6 @@ pi f2* Fconstant tau
 
 440e Fconstant a-440-freq
 
-2e 8e f** 0.999e f* Fconstant max_8_bit_volume
-2e 16e f** 0.999e f* Fconstant max_16_bit_volume
-
-44100e Fconstant cd_sample_rate
-cd_sample_rate 1/f Fconstant cd_sample_width
-
-8000e Fconstant low_sample_rate
-low_sample_rate 1/f Fconstant low_sample_width
-
-\ low_sample_rate Fconstant sample_rate
-\ low_sample_width Fconstant sample_width
-cd_sample_rate Fconstant sample_rate
-cd_sample_width Fconstant sample_width
-
 : _f2dup ( r1 r2 -- r1 r2 r1 r2 )
     fover fover ;
 
@@ -102,6 +88,9 @@ false Constant is-hold
 \ These words assume that r is a float value between -1 and 1.
 \ ---------------------------------------------------------------------------- \
 
+2e 8e f** 0.999e f* Fconstant max_8_bit_volume
+2e 16e f** 0.999e f* Fconstant max_16_bit_volume
+
 : u8-mono-out ( r -- )
     1e f+ f2/ max_8_bit_volume f*
     f>s emit ;
@@ -120,15 +109,36 @@ false Constant is-hold
 \ Main
 \ ---------------------------------------------------------------------------- \
 
+44100e Fconstant cd_sample_rate
+cd_sample_rate Fvalue sample-rate
+sample-rate 1/f Fvalue sample-width
+
+: set-sample-rate ( r -- )
+    to sample-rate
+    sample-rate 1/f to sample-width ;
+
+Defer print-sample
+' s16_le-mono-out is print-sample
+: set-sample-size ( n -- )
+    assert( dup 16 = over 8 = or )
+    8 = if
+        [ ' u8-mono-out ] literal is print-sample
+    then ;
+
 : tick-to-t ( n -- r )
-    s>f sample_width f* ;
+    s>f sample-width f* ;
 
 : main
-    sample_rate 1.1e f* f>s 0 do
+    depth 0 > if
+        set-sample-size
+    then
+    fdepth 0 > if
+        set-sample-rate
+    then
+    sample-rate 1.1e f* f>s 0 do
         i tick-to-t
         sample-value
-        s16_le-mono-out
-        \ u8-mono-out
+        print-sample
     loop
     assert( depth 0= )
     assert( fdepth 0= ) ;
