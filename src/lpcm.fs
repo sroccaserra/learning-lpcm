@@ -76,6 +76,11 @@ false Constant is-hold
         -1e
     then ;
 
+: saw-wave ( t freq -- r )
+    f* f2*
+    begin fdup 1e f> while
+        2e f- repeat ;
+
 : mixed-square-and-sine-wave ( t freq -- r )
     .15e .85e { f: square-k f: sine-k }
     _f2dup square-wave square-k f*
@@ -115,6 +120,7 @@ false Constant is-hold
         a-440-freq ( envelope t freq )
 
         \ sine-wave
+        \ saw-wave
         \ square-wave 8e f/
         mixed-square-and-sine-wave
         f*
